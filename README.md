@@ -9,7 +9,6 @@ Via cargo:
 ```bash
 cargo install anchor-viz
 ```
-then link the executable via e.g. either `cp /path/to/.cargo/bin/anchor-viz /usr/local/bin/anchorviz` or `ln -s /path/to/.cargo/bin/anchor-viz /usr/local/bin/anchorviz` if that's in your `PATH`.
 
 From source:
 
