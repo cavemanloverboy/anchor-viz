@@ -7,7 +7,10 @@ use plotters_backend::text_anchor::{HPos, VPos};
 use plotters_backend::{BackendColor, FontStyle};
 use std::convert::TryInto;
 
-/// This function was adapted from anchor-lang & anchor-syn.
+/// This function was taken and adapted from anchor-lang & anchor-syn.
+/// It takes in a path to an IDL (JSON) and loads it into an Idl struct (anchor-syn).
+///
+/// By default we set `seeds_feature = false`, `skip_lint = False`.
 fn extract_idl(file: &str, skip_lint: bool) -> Result<Option<Idl>> {
     // defaults to no seeds;
     let file = shellexpand::tilde(file);
@@ -16,11 +19,13 @@ fn extract_idl(file: &str, skip_lint: bool) -> Result<Option<Idl>> {
 }
 
 /// Given a program-name, generate visualization from the idl extracted by anchor-syn.
-/// This function extracts and passses the idl into `visual(...)` -- the viz workhorse fn.
+/// This function extracts and passses the idl into `visual(...)` -- the primary backend function.
+///
 /// If program-name is None, default to current dir name.
+///
 /// This function assumes you are either in the root dir of an anchor program,
-/// e.g. `anchor init my_project` `cd my_project`,
-/// or in the my_project/programs/my_program directory.
+/// e.g. `anchor init my_project` + `cd my_project`,
+/// or in the `my_project/programs/my_program` directory.
 #[allow(clippy::too_many_arguments, unused_variables)]
 pub fn visual(
     program_name: Option<String>,
@@ -60,14 +65,12 @@ pub fn visual(
         .to_string();
 
     // Generate visualization
-    visualize(idl, &viz_out);
-
-    Ok(())
+    visualize(idl, &viz_out)
 }
 
 /// This function takes in an Idl object (from anchor-syn) and and output path,
 /// and generates a visualization of the instructions of an anchor program.
-pub fn visualize(idl: Idl, out: &str) {
+fn visualize(idl: Idl, out: &str) -> Result<()> {
     // how many items per row, per instruction/method.
     const ROW_WIDTH: usize = 2;
     // width and height of fig objects
@@ -861,8 +864,11 @@ pub fn visualize(idl: Idl, out: &str) {
                 .expect("couldn't write argument");
         }
     }
+    Ok(())
 }
 
+/// Takes any nested `account_group` structure, flattens it, and
+/// returns all accounts within as a Vec<IdlAccounts>.
 fn unpack_group(account_group: IdlAccounts) -> Vec<IdlAccount> {
     let mut v: Vec<IdlAccount> = vec![];
 
