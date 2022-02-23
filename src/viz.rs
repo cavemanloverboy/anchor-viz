@@ -50,8 +50,8 @@ pub fn visual(
             .expect("invalid workspace")
             .to_string();
         idl = extract_idl(&format!("programs/{}/src/lib.rs", stem), SKIP_LINT)
-            .unwrap_or_else(|_| panic!("\n\n\n\nNo program named {}.\nYour ./programs/PROGRAM name must not match your root anchor program name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n",stem))
-            .unwrap_or_else(|| panic!("\n\n\n\nNo program named {}.\nYour ./programs/PROGRAM name must not match your root anchor program name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n",stem));
+            .unwrap_or_else(|_| panic!("\n\n\n\nNo program named {}. Either you are not in an anchor project directory or\nyour ./programs/PROGRAM name must not match your root anchor project directory name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n",stem))
+            .unwrap_or_else(|| panic!("\n\n\n\nNo program named {}. Either you are not in an anchor project directory or\nyour ./programs/PROGRAM name must not match your root anchor project directory name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n",stem));     
     } else {
         idl = extract_idl(&format!("programs/{}/src/lib.rs", program_name.as_ref().unwrap()), SKIP_LINT)
             .unwrap_or_else(|_| panic!("\n\n\n\nNo program named {}.\ncd into your program's directory or try anchorviz -p PROGRAM again\n\n\n\n", program_name.as_ref().unwrap()))
