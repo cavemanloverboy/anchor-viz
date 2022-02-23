@@ -27,7 +27,7 @@ make linux-mac
 to build the executable and then copy it to `/usr/local/bin/` to link the executable (assuming /usr/local/bin is in your `PATH`).
 
 # Usage
-To use anchorviz, run `anchorviz` in the root directory of an anchor project or in a program directory. For example,
+To use anchorviz, run `anchorviz` (or `anchor-viz` if installed via cargo) in the root directory of an anchor project or in a program directory. For example,
 ```bash
 anchor init my_project
 cd my_project # or cd my_project/programs/my_project
