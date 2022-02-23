@@ -1,21 +1,76 @@
 use anchor_syn::idl::{Idl, IdlAccount, IdlAccountItem, IdlAccounts};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use plotters::prelude::*;
 use plotters::style::text_anchor::Pos;
 use plotters::style::ShapeStyle;
 use plotters_backend::text_anchor::{HPos, VPos};
 use plotters_backend::{BackendColor, FontStyle};
 use std::convert::TryInto;
-
-/// This function was taken and adapted from anchor-lang & anchor-syn.
-/// It takes in a path to an IDL (JSON) and loads it into an Idl struct (anchor-syn).
+use std::path::{PathBuf, Path};
+ 
+/// This function and necessary infrastructure was taken and adapted from anchor-lang & anchor-syn.
+/// It generates an IDL from the source code of an anchor program and loads it into an Idl struct (anchor-syn).
 ///
 /// By default we set `seeds_feature = false`, `skip_lint = False`.
 fn extract_idl(file: &str, skip_lint: bool) -> Result<Option<Idl>> {
     // defaults to no seeds;
     let file = shellexpand::tilde(file);
-    let cargo_version = env!("CARGO_PKG_VERSION").to_string(); //.else("0.1.0");
-    anchor_syn::idl::file::parse(&*file, cargo_version, false, !skip_lint)
+    let manifest_from_path = std::env::current_dir()?.join(PathBuf::from(&*file).parent().unwrap());
+    let cargo = Manifest::discover_from_path(manifest_from_path)?
+        .ok_or_else(|| anyhow!("Cargo.toml not found"))?;
+    anchor_syn::idl::file::parse(&*file, cargo.inner.version(), false, !skip_lint)
+}
+
+/// This struct was taken and adapted from anchor-cli 0.21.0
+#[derive(Debug, Clone, PartialEq)]
+pub struct Manifest(cargo_toml::Manifest);
+/// This struct was taken and adapted from anchor-cli 0.21.0
+pub struct WithPath<T> {
+    inner: T,
+}
+
+impl<T> WithPath<T> {
+    pub fn new(inner: T) -> Self {
+        Self { inner }
+    }
+}
+
+impl Manifest {
+
+    pub fn from_path(p: impl AsRef<Path>) -> Result<Self> {
+        cargo_toml::Manifest::from_path(p)
+            .map(Manifest)
+            .map_err(Into::into)
+    }
+
+    // Climbs each parent directory from a given starting directory until we find a Cargo.toml.
+    pub fn discover_from_path(start_from: PathBuf) -> Result<Option<WithPath<Manifest>>> {
+        let mut cwd_opt = Some(start_from.as_path());
+
+        while let Some(cwd) = cwd_opt {
+            for f in std::fs::read_dir(cwd)? {
+                let p = f?.path();
+                if let Some(filename) = p.file_name() {
+                    if filename.to_str() == Some("Cargo.toml") {
+                        let m = WithPath::new(Manifest::from_path(&p)?);
+                        return Ok(Some(m));
+                    }
+                }
+            }
+
+            // Not found. Go up a directory level.
+            cwd_opt = cwd.parent();
+        }
+
+        Ok(None)
+    }
+
+    pub fn version(&self) -> String {
+        match &self.0.package {
+            Some(package) => package.version.to_string(),
+            _ => "0.0.0".to_string(),
+        }
+    }
 }
 
 /// Given a program-name, generate visualization from the idl extracted by anchor-syn.
