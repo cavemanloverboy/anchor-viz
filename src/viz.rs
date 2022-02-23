@@ -12,13 +12,13 @@ use std::path::{PathBuf, Path};
 /// It generates an IDL from the source code of an anchor program and loads it into an Idl struct (anchor-syn).
 ///
 /// By default we set `seeds_feature = false`, `skip_lint = False`.
-fn extract_idl(file: &str, skip_lint: bool) -> Result<Option<Idl>> {
+fn extract_idl(file: &str, seeds_feature: bool, skip_lint: bool) -> Result<Option<Idl>> {
     // defaults to no seeds;
     let file = shellexpand::tilde(file);
     let manifest_from_path = std::env::current_dir()?.join(PathBuf::from(&*file).parent().unwrap());
     let cargo = Manifest::discover_from_path(manifest_from_path)?
         .ok_or_else(|| anyhow!("Cargo.toml not found"))?;
-    anchor_syn::idl::file::parse(&*file, cargo.inner.version(), false, !skip_lint)
+    anchor_syn::idl::file::parse(&*file, cargo.inner.version(), seeds_feature, !skip_lint)
 }
 
 /// This struct was taken and adapted from anchor-cli 0.21.0
@@ -86,31 +86,64 @@ pub fn visual(
     program_name: Option<String>,
     //viz_args: Vec<String>,
 ) -> Result<()> {
-    const SKIP_LINT: bool = false;
+    
+    // new anchor-cli feature as of 0.22.0
+    const SKIP_LINT: bool = true;
 
     // Grab IDL
     let workspace_dir = std::env::current_dir()?;
-    let extracted_idl = extract_idl("src/lib.rs", SKIP_LINT);
+
 
     let idl;
-    if let Ok(my_idl) = extracted_idl {
-        // this works if you are in your programs/YOUR_program directory, not from project root dir
-        idl = my_idl.unwrap();
-    } else if program_name.is_none() {
-        let stem = workspace_dir
-            .file_stem()
-            .unwrap()
-            .to_os_string()
-            .to_str()
-            .expect("invalid workspace")
-            .to_string();
-        idl = extract_idl(&format!("programs/{}/src/lib.rs", stem), SKIP_LINT)
-            .unwrap_or_else(|_| panic!("\n\n\n\nNo program named {}. Either you are not in an anchor project directory or\nyour ./programs/PROGRAM name must not match your root anchor project directory name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n",stem))
-            .unwrap_or_else(|| panic!("\n\n\n\nNo program named {}. Either you are not in an anchor project directory or\nyour ./programs/PROGRAM name must not match your root anchor project directory name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n",stem));     
+    let mut extracted_idl;
+    // If no program_name is provided, try extracting at src/lib.rs without seeds_feature
+    if program_name.is_none() {
+        extracted_idl = extract_idl("src/lib.rs", false, SKIP_LINT);
+        if let Ok(my_idl) = extracted_idl {
+            idl = my_idl.unwrap();
+        } else {
+            // then, try with seeds_feature
+            extracted_idl = extract_idl("src/lib.rs", true, SKIP_LINT);
+            if let Ok(my_idl) = extracted_idl {
+                idl = my_idl.unwrap();
+            } else {
+                // then try searching in programs/ directory (with no seeds)
+                let stem = workspace_dir
+                    .file_stem()
+                    .unwrap()
+                    .to_os_string()
+                    .to_str()
+                    .expect("invalid workspace")
+                    .to_string();
+                extracted_idl = extract_idl(&format!("programs/{}/src/lib.rs", stem), false, SKIP_LINT);
+                if let Ok(my_idl) = extracted_idl {
+                    idl = my_idl.unwrap();
+                } else{
+                    // then with seeds
+                    extracted_idl = extract_idl(&format!("programs/{}/src/lib.rs", stem), true, SKIP_LINT);
+                    if let Ok(my_idl) = extracted_idl {
+                        idl = my_idl.unwrap();
+                    } else {
+                        panic!("\n\n\n\nNo program found. Either you are not in an anchor project directory or\nyour ./programs/PROGRAM name must not match your root anchor project directory name.\ncd into your program's directory or try anchorviz -p PROGRAM\n\n\n");
+                    }
+                }
+            }
+        }
     } else {
-        idl = extract_idl(&format!("programs/{}/src/lib.rs", program_name.as_ref().unwrap()), SKIP_LINT)
-            .unwrap_or_else(|_| panic!("\n\n\n\nNo program named {}.\ncd into your program's directory or try anchorviz -p PROGRAM again\n\n\n\n", program_name.as_ref().unwrap()))
-            .unwrap_or_else(|| panic!("\n\n\n\nNo program named {}.\ncd into your program's directory or try anchorviz -p PROGRAM again\n\n\n\n", program_name.as_ref().unwrap()));
+        // if program_name provided then try that (first without seeds)
+        extracted_idl =  extract_idl(&format!("programs/{}/src/lib.rs", program_name.as_ref().unwrap()), false, SKIP_LINT);
+        if let Ok(my_idl) = extracted_idl{
+            idl = my_idl.unwrap();
+        } else {
+            // with seeds
+            extracted_idl =  extract_idl(&format!("programs/{}/src/lib.rs", program_name.as_ref().unwrap()), true, SKIP_LINT);
+            if let Ok(my_idl) = extracted_idl{
+                idl = my_idl.unwrap();
+            } else {
+                panic!("\n\n\n\nNo program named {}.\ncd into your program's directory or try anchorviz -p PROGRAM again\n\n\n\n", program_name.as_ref().unwrap())
+            }
+
+        }
     }
 
     let viz_out: String = workspace_dir

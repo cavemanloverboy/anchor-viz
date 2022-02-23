@@ -31,3 +31,15 @@ fn main() -> Result<()> {
 
     viz::visual(name)
 }
+
+
+#[test]
+fn test_0() {
+    viz::visual(Some("test_0/programs/test_0".to_string())).unwrap();
+}
+
+#[test]
+fn test_1() {
+    viz::visual(Some("test_1/programs/test_1".to_string())).unwrap();
+}
+
