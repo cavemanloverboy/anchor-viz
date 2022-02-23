@@ -3,6 +3,8 @@ name = "anchor-viz"
 version = "0.1.0"
 authors = ["cavemanloverboy <caveycool@gmail.com>"]
 edition = "2021"
+license = "MIT"
+description = "This crate pairs well with anchor-lang. It generates an executable which generates visualizations of the instructions of an anchor program."
 
 [[bin]]
 name = "anchor-viz"
