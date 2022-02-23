@@ -5,6 +5,12 @@ A color-coded visualization tool for the instructions of an anchor program.
 ![basic_2](https://user-images.githubusercontent.com/93507302/155232816-7c3b34a7-9a89-4d38-abd7-79e302c91d2c.png)
 (This is a schematic of `basic-2` from anchor's `examples/tutorial` directory)
 # Installation
+Via cargo:
+```bash
+cargo install anchor-viz
+```
+then link the executable via e.g. either `cp /path/to/.cargo/bin/anchor-viz /usr/local/bin/anchorviz` or `ln -s /path/to/.cargo/bin/anchor-viz /usr/local/bin/anchorviz` if that's in your `PATH`.
+
 From source:
 
 To install, run
