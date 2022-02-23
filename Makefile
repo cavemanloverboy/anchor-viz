@@ -5,4 +5,4 @@ build:
 .PHONY: linux-mac
 linux-mac:
 	cargo build --release
-	cp target/release/anchor-viz /usr/local/bin/anchorviz
+	cp target/release/anchor-viz /usr/local/bin/anchor-viz
