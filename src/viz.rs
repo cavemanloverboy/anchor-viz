@@ -19,7 +19,7 @@ fn extract_idl(file: &str, skip_lint: bool) -> Result<Option<Idl>> {
 }
 
 /// Given a program-name, generate visualization from the idl extracted by anchor-syn.
-/// This function extracts and passses the idl into `visual(...)` -- the primary backend function.
+/// This function extracts and passses the idl into `visualize(...)` -- the primary backend function.
 ///
 /// If program-name is None, default to current dir name.
 ///
