@@ -1,3 +1,5 @@
+[0.22.2]
+- Building anchor-lang with init_if_needed feature
 
 [0.22.1]
 - Changed SKIP_LINT to false always
