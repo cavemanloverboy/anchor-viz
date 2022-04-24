@@ -1,6 +1,6 @@
 [package]
 name = "anchor-viz"
-version = "0.22.2"
+version = "0.24.2"
 authors = ["cavemanloverboy <caveycool@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -14,13 +14,13 @@ path = "src/main.rs"
 clap = { version = "3.0.13", features = ["derive"] }
 anyhow = "1.0.32"
 syn = { version = "1.0.60", features = ["full", "extra-traits"] }
-anchor-syn = { version = "0.22.0", features = ["idl", "init-if-needed"] }
-anchor-lang = { version = "0.22.0", features = ["init-if-needed"] }
+anchor-syn = { version = "0.24.2", features = ["idl", "init-if-needed"] }
+anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
 serde_json = "1.0"
 plotters = "0.3.1"
 plotters-backend = "0.3.1"
 shellexpand = "2.1.0"
-anchor-client = "0.22.0"
+anchor-client = "0.24.2"
 toml = "0.5.8"
 semver = "1.0.4"
 serde = { version = "1.0.122", features = ["derive"] }
