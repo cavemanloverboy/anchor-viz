@@ -1,5 +1,4 @@
 use anyhow::Result;
-use clap::{Arg, Command};
 
 pub mod viz;
 
@@ -9,37 +8,33 @@ pub mod viz;
 /// Arguments:
 /// --program-name (-p) program_name
 fn main() -> Result<()> {
-    let app = Command::new("anchor-viz")
-        .version("0.1.0")
-        .about("Visualize Anchor Programs")
-        .author("@cavemanloverboy (Cavey Cool)");
+    // Parse args
+    let args = Args::parse();
 
-    let program_name = Arg::new("program-name")
-        .short('p')
-        .takes_value(true)
-        .help("name of anchor program. defaults to current dir name.");
-    //.required(true);
-
-    let app = app.arg(program_name);
-
-    let matches = app.get_matches();
-
-    // Extract program_name
-    let name = matches
-        .value_of("program-name")
-        .map(|name| name.to_string());
-
-    viz::visual(name)
+    viz::visual(args.program_name, args.width)
 }
 
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Name of programto visualize
+    #[clap(short, long)]
+    program_name: Option<String>,
+
+    /// Number of accounts, arguments per instruction column
+    #[clap(short, long, default_value_t = 2)]
+    width: usize,
+}
 
 #[test]
 fn test_0() {
-    viz::visual(Some("test_0/programs/test_0".to_string())).unwrap();
+    viz::visual(Some("test_0/programs/test_0".to_string()), 2).unwrap();
 }
 
 #[test]
 fn test_1() {
-    viz::visual(Some("test_1/programs/test_1".to_string())).unwrap();
+    viz::visual(Some("test_1/programs/test_1".to_string()), 2).unwrap();
 }
 

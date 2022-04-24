@@ -84,6 +84,7 @@ impl Manifest {
 #[allow(clippy::too_many_arguments, unused_variables)]
 pub fn visual(
     program_name: Option<String>,
+    width: usize,
     //viz_args: Vec<String>,
 ) -> Result<()> {
     
@@ -153,14 +154,12 @@ pub fn visual(
         .to_string();
 
     // Generate visualization
-    visualize(idl, &viz_out)
+    visualize(idl, &viz_out, width)
 }
 
 /// This function takes in an Idl object (from anchor-syn) and and output path,
 /// and generates a visualization of the instructions of an anchor program.
-fn visualize(idl: Idl, out: &str) -> Result<()> {
-    // how many items per row, per instruction/method.
-    const ROW_WIDTH: usize = 2;
+fn visualize(idl: Idl, out: &str, width: usize) -> Result<()> {
     // width and height of fig objects
     const BOX_PX_WIDTH: usize = 240;
     const BOX_PX_HEIGHT: usize = 60;
@@ -199,10 +198,10 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
 
         let num_accounts = accounts.len();
         let acct_height = {
-            if num_accounts % ROW_WIDTH == 0 {
-                num_accounts / ROW_WIDTH
+            if num_accounts % width == 0 {
+                num_accounts / width
             } else {
-                num_accounts / ROW_WIDTH + 1
+                num_accounts / width + 1
             }
         };
 
@@ -213,20 +212,20 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
             .fold(0, |acc, x| acc + if x.is_signer { 1 } else { 0 });
 
         let sign_height = {
-            if signers % ROW_WIDTH == 0 {
-                signers / ROW_WIDTH
+            if signers % width == 0 {
+                signers / width
             } else {
-                signers / ROW_WIDTH + 1
+                signers / width + 1
             }
         }
         .max(1);
 
         let args = instruction.args.len();
         let arg_height = {
-            if args % ROW_WIDTH == 0 {
-                args / ROW_WIDTH
+            if args % width == 0 {
+                args / width
             } else {
-                args / ROW_WIDTH + 1
+                args / width + 1
             }
         };
 
@@ -245,7 +244,7 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
     // 7) populate args
 
     // 0) Create a canvas to draw on
-    let fig_width: u32 = ((BOX_PX_WIDTH + BUFFER_WIDTH) * ROW_WIDTH * columns
+    let fig_width: u32 = ((BOX_PX_WIDTH + BUFFER_WIDTH) * width * columns
         + BUFFER_WIDTH * columns
         + (columns - 1) * SEP_WIDTH)
         .try_into()
@@ -306,14 +305,14 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                 [
                     (
                         // top left
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
                             - SEP_WIDTH) as i32,
                         (HEADER_PX_HEIGHT + BUFFER_WIDTH) as i32,
                     ),
                     (
                         // bottom right
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i) as i32,
                         // ((rows+1)*BOX_PX_HEIGHT + HEADER_PX_HEIGHT + (rows + 2)*BUFFER_WIDTH) as i32, // idk why this doesn't work... this is (in principle) fig_height - 3*BUFFER_WIDTH
                         (fig_height as i32 - 3 * BUFFER_WIDTH as i32),
@@ -337,17 +336,17 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                 [
                     (
                         // top left
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
-                            + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2
+                            + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2
                             - BOX_PX_WIDTH / 2) as i32,
                         (HEADER_PX_HEIGHT + BUFFER_WIDTH) as i32,
                     ),
                     (
                         // bottom right
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
-                            + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2
+                            + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2
                             + BOX_PX_WIDTH / 2) as i32,
                         (HEADER_PX_HEIGHT + BUFFER_WIDTH + BOX_PX_HEIGHT) as i32,
                     ),
@@ -359,9 +358,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
             .draw(&Text::new(
                 "Instruction:".to_string(),
                 (
-                    ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH) * i
+                    ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH) * i
                         + BUFFER_WIDTH
-                        + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2)
+                        + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2)
                         as i32,
                     (HEADER_PX_HEIGHT + BUFFER_WIDTH + BOX_PX_HEIGHT / 3) as i32,
                 ),
@@ -382,9 +381,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
             .draw(&Text::new(
                 instruction.name.to_string(),
                 (
-                    ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH) * i
+                    ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH) * i
                         + BUFFER_WIDTH
-                        + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2)
+                        + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2)
                         as i32,
                     (HEADER_PX_HEIGHT + BUFFER_WIDTH + 2 * BOX_PX_HEIGHT / 3) as i32,
                 ),
@@ -409,17 +408,17 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                 [
                     (
                         // top left
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
-                            + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2
+                            + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2
                             - BOX_PX_WIDTH / 2) as i32,
                         (HEADER_PX_HEIGHT + BUFFER_WIDTH) as i32,
                     ),
                     (
                         // bottom right
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
-                            + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2
+                            + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2
                             + BOX_PX_WIDTH / 2) as i32,
                         (HEADER_PX_HEIGHT + BUFFER_WIDTH + BOX_PX_HEIGHT) as i32,
                     ),
@@ -431,9 +430,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
             .draw(&Text::new(
                 "State Method:".to_string(),
                 (
-                    ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH) * i
+                    ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH) * i
                         + BUFFER_WIDTH
-                        + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2)
+                        + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2)
                         as i32,
                     (HEADER_PX_HEIGHT + BUFFER_WIDTH + BOX_PX_HEIGHT / 3) as i32,
                 ),
@@ -454,9 +453,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
             .draw(&Text::new(
                 format!("{}.{}", state_name, state_method.name),
                 (
-                    ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH) * i
+                    ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH) * i
                         + BUFFER_WIDTH
-                        + (BOX_PX_WIDTH * ROW_WIDTH + BUFFER_WIDTH * (ROW_WIDTH + 1)) / 2)
+                        + (BOX_PX_WIDTH * width + BUFFER_WIDTH * (width + 1)) / 2)
                         as i32,
                     (HEADER_PX_HEIGHT + BUFFER_WIDTH + 2 * BOX_PX_HEIGHT / 3) as i32,
                 ),
@@ -488,16 +487,16 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
         let mut signers = 0; // counter
                              // 4) Populate signers
         for &signer in inst_signers.iter() {
-            let (l, k) = (signers / ROW_WIDTH, signers % ROW_WIDTH);
+            let (l, k) = (signers / width, signers % width);
 
             backend
                 .draw(&Rectangle::new(
                     [
                         (
                             // top left
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * k) as i32,
@@ -509,9 +508,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                         ),
                         (
                             // bottom right
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * (k + 1)) as i32,
@@ -529,7 +528,7 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                 .draw(&Text::new(
                     "Signer:".to_string(),
                     (
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
                             + BUFFER_WIDTH * (k + 1)
                             + BOX_PX_WIDTH * k
@@ -561,7 +560,7 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                 .draw(&Text::new(
                     signer.name.to_string(),
                     (
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
                             + BUFFER_WIDTH * (k + 1)
                             + BOX_PX_WIDTH * k
@@ -594,10 +593,10 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
         }
 
         let signer_offset = {
-            if signers % ROW_WIDTH == 0 {
-                signers / ROW_WIDTH
+            if signers % width == 0 {
+                signers / width
             } else {
-                signers / ROW_WIDTH + 1
+                signers / width + 1
             }
             .max(1)
         };
@@ -607,16 +606,16 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
         // 5) Populate mut accts
         for account in accounts.clone() {
             if account.is_mut {
-                let (l, k) = (accounts_drawn / ROW_WIDTH, accounts_drawn % ROW_WIDTH);
+                let (l, k) = (accounts_drawn / width, accounts_drawn % width);
 
                 backend
                     .draw(&Rectangle::new(
                         [
                             (
                                 // top left
-                                ((BOX_PX_WIDTH * ROW_WIDTH
+                                ((BOX_PX_WIDTH * width
                                     + SEP_WIDTH
-                                    + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                    + (1 + width) * BUFFER_WIDTH)
                                     * i
                                     + BUFFER_WIDTH * (k + 1)
                                     + BOX_PX_WIDTH * k) as i32,
@@ -629,9 +628,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                             ),
                             (
                                 // bottom right
-                                ((BOX_PX_WIDTH * ROW_WIDTH
+                                ((BOX_PX_WIDTH * width
                                     + SEP_WIDTH
-                                    + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                    + (1 + width) * BUFFER_WIDTH)
                                     * i
                                     + BUFFER_WIDTH * (k + 1)
                                     + BOX_PX_WIDTH * (k + 1))
@@ -651,9 +650,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                     .draw(&Text::new(
                         "Mutable Account:".to_string(),
                         (
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * k
@@ -685,9 +684,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                     .draw(&Text::new(
                         account.name.to_string(),
                         (
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * k
@@ -723,16 +722,16 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
         // 6) Populate immut accts
         for account in &accounts.clone() {
             if !account.is_mut {
-                let (l, k) = (accounts_drawn / ROW_WIDTH, accounts_drawn % ROW_WIDTH);
+                let (l, k) = (accounts_drawn / width, accounts_drawn % width);
 
                 backend
                     .draw(&Rectangle::new(
                         [
                             (
                                 // top left
-                                ((BOX_PX_WIDTH * ROW_WIDTH
+                                ((BOX_PX_WIDTH * width
                                     + SEP_WIDTH
-                                    + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                    + (1 + width) * BUFFER_WIDTH)
                                     * i
                                     + BUFFER_WIDTH * (k + 1)
                                     + BOX_PX_WIDTH * k) as i32,
@@ -745,9 +744,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                             ),
                             (
                                 // bottom right
-                                ((BOX_PX_WIDTH * ROW_WIDTH
+                                ((BOX_PX_WIDTH * width
                                     + SEP_WIDTH
-                                    + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                    + (1 + width) * BUFFER_WIDTH)
                                     * i
                                     + BUFFER_WIDTH * (k + 1)
                                     + BOX_PX_WIDTH * (k + 1))
@@ -767,9 +766,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                     .draw(&Text::new(
                         "Immutable Account:".to_string(),
                         (
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * k
@@ -801,9 +800,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                     .draw(&Text::new(
                         account.name.to_string(),
                         (
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * k
@@ -837,26 +836,26 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
         }
 
         let account_offset = {
-            if accounts_drawn % ROW_WIDTH == 0 {
-                accounts_drawn / ROW_WIDTH
+            if accounts_drawn % width == 0 {
+                accounts_drawn / width
             } else {
-                accounts_drawn / ROW_WIDTH + 1
+                accounts_drawn / width + 1
             }
         };
         let offset = signer_offset + account_offset;
 
         // 7) Populate args
         for (args_drawn, arg) in instruction.args.iter().enumerate() {
-            let (l, k) = (args_drawn / ROW_WIDTH, args_drawn % ROW_WIDTH);
+            let (l, k) = (args_drawn / width, args_drawn % width);
 
             backend
                 .draw(&Rectangle::new(
                     [
                         (
                             // top left
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * k) as i32,
@@ -868,9 +867,9 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                         ),
                         (
                             // bottom right
-                            ((BOX_PX_WIDTH * ROW_WIDTH
+                            ((BOX_PX_WIDTH * width
                                 + SEP_WIDTH
-                                + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                                + (1 + width) * BUFFER_WIDTH)
                                 * i
                                 + BUFFER_WIDTH * (k + 1)
                                 + BOX_PX_WIDTH * (k + 1)) as i32,
@@ -890,7 +889,7 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                     //"Argument:".to_string(),
                     format!("{:?}:", arg.ty).to_lowercase(),
                     (
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
                             + BUFFER_WIDTH * (k + 1)
                             + BOX_PX_WIDTH * k
@@ -922,7 +921,7 @@ fn visualize(idl: Idl, out: &str) -> Result<()> {
                 .draw(&Text::new(
                     arg.name.to_string(),
                     (
-                        ((BOX_PX_WIDTH * ROW_WIDTH + SEP_WIDTH + (1 + ROW_WIDTH) * BUFFER_WIDTH)
+                        ((BOX_PX_WIDTH * width + SEP_WIDTH + (1 + width) * BUFFER_WIDTH)
                             * i
                             + BUFFER_WIDTH * (k + 1)
                             + BOX_PX_WIDTH * k
